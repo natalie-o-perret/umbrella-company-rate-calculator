@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umbrella Company Rate Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        h1 {
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        
+        .input-section {
+            background: var(--input-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px solid var(--border-color);
+        }
+        
+        .input-section h3 {
+            color: var(--text-color);
+            margin-top: 0;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        input[type="number"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            margin: 10px 0;
+        }
+        
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .slider-value {
+            font-weight: 600;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        
+        .color-palette {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-option.active {
+            border-color: #333;
+            transform: scale(1.2);
+        }
+        
+        .color-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .palette-label {
+            font-weight: 600;
+            color: #333;
+            margin-right: 10px;
+        }
+        
+        :root {
+            --primary-color: #e91e63;
+            --secondary-color: #ad1457;
+            --primary-rgb: 233, 30, 99;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --input-bg: #f8f9ff;
+            --border-color: #e1e5f2;
+            --body-bg-start: var(--primary-color);
+            --body-bg-end: var(--secondary-color);
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --card-bg: #2d2d2d;
+            --input-bg: #2a2a2a;
+            --border-color: #404040;
+            --body-bg-start: #1a1a1a;
+            --body-bg-end: #0d0d0d;
+        }
+        
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: var(--primary-color);
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
+        }
+        
+        .theme-label {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+        
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+        }
+        
+        .result-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+        }
+        
+        .result-value {
+            font-size: 1.6em;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+        
+        .breakdown {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+        
+        .breakdown h3 {
+            color: var(--text-color);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+        }
+        
+        .breakdown-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 18px;
+        }
+        
+        .breakdown-item .label {
+            color: #999;
+        }
+        
+        .breakdown-item .value {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .palette-label {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-right: 10px;
+        }
+        
+        .current-data {
+            background: rgba(var(--primary-rgb), 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .current-data h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💼 Umbrella Company Rate Calculator</h1>
+        
+        <div class="input-section">
+            <h3>💼 Simulation Parameters</h3>
+            
+            <div class="color-palette">
+                <span class="palette-label">🎨 Theme:</span>
+                <div class="color-option active" data-primary="#e91e63" data-secondary="#ad1457" data-rgb="233, 30, 99" style="background: linear-gradient(135deg, #e91e63, #ad1457);" title="Red Pink"></div>
+                <div class="color-option" data-primary="#667eea" data-secondary="#764ba2" data-rgb="102, 126, 234" style="background: linear-gradient(135deg, #667eea, #764ba2);" title="Purple Blue"></div>
+                <div class="color-option" data-primary="#ff9a56" data-secondary="#ff6b35" data-rgb="255, 154, 86" style="background: linear-gradient(135deg, #ff9a56, #ff6b35);" title="Orange"></div>
+                <div class="color-option" data-primary="#4ecdc4" data-secondary="#44a08d" data-rgb="78, 205, 196" style="background: linear-gradient(135deg, #4ecdc4, #44a08d);" title="Teal"></div>
+                <div class="color-option" data-primary="#28a745" data-secondary="#20c997" data-rgb="40, 167, 69" style="background: linear-gradient(135deg, #28a745, #20c997);" title="Green"></div>
+                <div class="color-option" data-primary="#6f42c1" data-secondary="#e83e8c" data-rgb="111, 66, 193" style="background: linear-gradient(135deg, #6f42c1, #e83e8c);" title="Purple Pink"></div>
+                
+                <div class="theme-toggle">
+                    <span class="theme-label">🌙</span>
+                    <div class="toggle-switch" id="darkModeToggle">
+                        <div class="toggle-slider"></div>
+                    </div>
+                    <span class="theme-label">☀️</span>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <div>
+                    <label for="tjm">Daily Rate €</label>
+                    <input type="number" id="tjm" value="600" step="10">
+                </div>
+                <div>
+                    <label for="days">Working Days</label>
+                    <input type="number" id="days" value="20" step="1">
+                </div>
+                <div>
+                    <label for="managementFees">Umbrella Company Fees %</label>
+                    <input type="number" id="managementFees" value="3.00" step="0.1" min="0" max="10">
+                </div>
+            </div>
+            <div class="input-group">
+                <div>
+                    <label for="businessExpenses">💼 Business Expenses (Rent, Hardware, etc.)</label>
+                    <div class="slider-container">
+                        <input type="range" id="businessExpenses" min="0" max="1500" value="0" step="50">
+                        <div class="slider-value"><span id="expensesValue">0€</span> / month</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results">
+            <div class="result-card">
+                <h3>💰 Monthly Revenue</h3>
+                <div class="result-value" id="revenue">10,710€</div>
+            </div>
+            <div class="result-card">
+                <h3>💸 Net Salary Before Income Tax</h3>
+                <div class="result-value" id="netSalaryBeforeTax">4,621€</div>
+            </div>
+            <div class="result-card">
+                <h3>🏛️ Net After Tax & Expenses</h3>
+                <div class="result-value" id="netSalaryAfterTax">3,890€</div>
+            </div>
+            <div class="result-card">
+                <h3>📊 After-Tax/Revenue Ratio</h3>
+                <div class="result-value" id="ratio">36.3%</div>
+            </div>
+        </div>
+        
+        <div class="breakdown">
+            <h3>📋 Detailed Breakdown</h3>
+            <div class="breakdown-item">
+                <span class="label">Monthly Revenue (Daily Rate × Days)</span>
+                <span class="value" id="breakdownRevenue">10,710.00€</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="label">Employer Social Contributions (30.87%)</span>
+                <span class="value" id="breakdownEmployerCharges">-3,305.51€</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="label">Employee Social Contributions (11.98%)</span>
+                <span class="value" id="breakdownEmployeeCharges">-1,283.37€</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="label">Umbrella Company Fees (3.00%)</span>
+                <span class="value" id="breakdownManagementFees">-321.30€</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="label">Reserve Fund (9.70%)</span>
+                <span class="value" id="breakdownReserve">-1,038.87€</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="label">Net Salary Before Tax</span>
+                <span class="value" id="breakdownNetSalaryBeforeTax">4,620.84€</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="label">Income Tax (Progressive Rate)</span>
+                <span class="value" id="breakdownIncomeTax">-730.84€</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="label">Business Expenses (Tax Deductible)</span>
+                <span class="value" id="breakdownBusinessExpenses">-0€</span>
+            </div>
+            <div class="breakdown-item">
+                <span class="label">Net Salary After Tax & Expenses</span>
+                <span class="value" id="breakdownNetSalaryAfterTax">3,890.00€</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Social contribution rates from French umbrella company structure
+        const EMPLOYER_SOCIAL_CONTRIBUTIONS_RATE = 30.87 / 100; // 3305.51 / 10710
+        const EMPLOYEE_SOCIAL_CONTRIBUTIONS_RATE = 11.98 / 100; // 1283.37 / 10710
+        const RESERVE_FUND_RATE = 9.70 / 100;           // 1038.87 / 10710
+
+        // French income tax brackets for 2025 (for single person)
+        const TAX_BRACKETS = [
+            { min: 0, max: 11497, rate: 0.00 },
+            { min: 11498, max: 29315, rate: 0.11 },
+            { min: 29316, max: 83823, rate: 0.30 },
+            { min: 83824, max: 180294, rate: 0.41 },
+            { min: 180295, max: Infinity, rate: 0.45 }
+        ];
+
+        function calculateIncomeTax(annualSalary) {
+            let tax = 0;
+            
+            for (const bracket of TAX_BRACKETS) {
+                if (annualSalary > bracket.min) {
+                    const taxableInBracket = Math.min(annualSalary, bracket.max) - bracket.min + 1;
+                    tax += taxableInBracket * bracket.rate;
+                }
+            }
+            
+            return tax;
+        }
+
+        function calculate() {
+            const tjm = parseFloat(document.getElementById('tjm').value) || 0;
+            const days = parseInt(document.getElementById('days').value) || 0;
+            const managementFeesRate = (parseFloat(document.getElementById('managementFees').value) || 3.0) / 100;
+            const businessExpenses = parseFloat(document.getElementById('businessExpenses').value) || 0;
+            
+            const revenue = tjm * days;
+            const employerSocialContributions = revenue * EMPLOYER_SOCIAL_CONTRIBUTIONS_RATE;
+            const employeeSocialContributions = revenue * EMPLOYEE_SOCIAL_CONTRIBUTIONS_RATE;
+            const umbrellaCompanyFees = revenue * managementFeesRate;
+            const reserveFund = revenue * RESERVE_FUND_RATE;
+            const netSalaryBeforeTax = revenue - employerSocialContributions - employeeSocialContributions - umbrellaCompanyFees - reserveFund;
+            
+            // Calculate annual salary and income tax (business expenses reduce taxable income)
+            const annualSalaryBeforeTax = (netSalaryBeforeTax - businessExpenses) * 12;
+            const annualIncomeTax = calculateIncomeTax(Math.max(0, annualSalaryBeforeTax));
+            const monthlyIncomeTax = annualIncomeTax / 12;
+            const netSalaryAfterTax = netSalaryBeforeTax - monthlyIncomeTax - businessExpenses;
+            
+            const ratio = revenue > 0 ? (netSalaryAfterTax / revenue) * 100 : 0;
+            
+            // Update slider display
+            document.getElementById('expensesValue').textContent = formatEuro(businessExpenses);
+            
+            // Update main results
+            document.getElementById('revenue').textContent = formatEuro(revenue);
+            document.getElementById('netSalaryBeforeTax').textContent = formatEuro(netSalaryBeforeTax);
+            document.getElementById('netSalaryAfterTax').textContent = formatEuro(netSalaryAfterTax);
+            document.getElementById('ratio').textContent = ratio.toFixed(1) + '%';
+            
+            // Update breakdown
+            document.getElementById('breakdownRevenue').textContent = formatEuro(revenue);
+            document.getElementById('breakdownEmployerCharges').textContent = '-' + formatEuro(employerSocialContributions);
+            document.getElementById('breakdownEmployeeCharges').textContent = '-' + formatEuro(employeeSocialContributions);
+            document.getElementById('breakdownManagementFees').textContent = '-' + formatEuro(umbrellaCompanyFees);
+            document.getElementById('breakdownReserve').textContent = '-' + formatEuro(reserveFund);
+            document.getElementById('breakdownNetSalaryBeforeTax').textContent = formatEuro(netSalaryBeforeTax);
+            document.getElementById('breakdownIncomeTax').textContent = '-' + formatEuro(monthlyIncomeTax);
+            document.getElementById('breakdownBusinessExpenses').textContent = '-' + formatEuro(businessExpenses);
+            document.getElementById('breakdownNetSalaryAfterTax').textContent = formatEuro(netSalaryAfterTax);
+        }
+        
+        function formatEuro(amount) {
+            return new Intl.NumberFormat('fr-FR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(Math.round(amount)) + '€';
+        }
+        
+        function changeColorTheme(primary, secondary, rgb) {
+            const root = document.documentElement;
+            const body = document.body;
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            
+            root.style.setProperty('--primary-color', primary);
+            root.style.setProperty('--secondary-color', secondary);
+            root.style.setProperty('--primary-rgb', rgb);
+            
+            // Update background based on current theme
+            if (!isDark) {
+                body.style.background = `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`;
+            }
+        }
+        
+        function initializeColorPalette() {
+            const colorOptions = document.querySelectorAll('.color-option');
+            
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove active class from all options
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    
+                    // Add active class to clicked option
+                    this.classList.add('active');
+                    
+                    // Get color values and apply theme
+                    const primary = this.dataset.primary;
+                    const secondary = this.dataset.secondary;
+                    const rgb = this.dataset.rgb;
+                    
+                    changeColorTheme(primary, secondary, rgb);
+                });
+            });
+        }
+        
+        function initializeDarkMode() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const body = document.body;
+            
+            // Function to update background based on theme
+            function updateBackground(isDark) {
+                if (isDark) {
+                    body.style.background = 'linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)';
+                } else {
+                    body.style.background = `linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%)`;
+                }
+            }
+            
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.setAttribute('data-theme', 'dark');
+                darkModeToggle.classList.add('active');
+                updateBackground(true);
+            }
+            
+            darkModeToggle.addEventListener('click', function() {
+                const currentTheme = body.getAttribute('data-theme');
+                
+                if (currentTheme === 'dark') {
+                    body.removeAttribute('data-theme');
+                    darkModeToggle.classList.remove('active');
+                    localStorage.setItem('theme', 'light');
+                    updateBackground(false);
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    darkModeToggle.classList.add('active');
+                    localStorage.setItem('theme', 'dark');
+                    updateBackground(true);
+                }
+            });
+        }
+        
+        // Add event listeners
+        document.getElementById('tjm').addEventListener('input', calculate);
+        document.getElementById('days').addEventListener('input', calculate);
+        document.getElementById('managementFees').addEventListener('input', calculate);
+        document.getElementById('businessExpenses').addEventListener('input', calculate);
+        
+        // Initialize color palette
+        initializeColorPalette();
+        
+        // Initialize dark mode
+        initializeDarkMode();
+        
+        // Initial calculation
+        calculate();
+    </script>
+</body>
+</html>
