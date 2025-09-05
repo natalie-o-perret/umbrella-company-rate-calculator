@@ -8,7 +8,6 @@
         :root {
             --primary: #e91e63; --secondary: #f06292; --primary-rgb: 233, 30, 99;
             --card-bg: #fff; --input-bg: #f8f9fa; --text: #333; --border: #ddd;
-            transition: --primary 0.5s ease, --secondary 0.5s ease;
         }
         [data-theme="dark"] {
             --card-bg: #2d3748; --input-bg: #4a5568; --text: #e2e8f0; --border: #4a5568;
@@ -16,7 +15,7 @@
         
         * { box-sizing: border-box; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; 
-               background: linear-gradient(135deg, var(--primary), var(--secondary)); min-height: 100vh; transition: background 0.5s ease; }
+               background: linear-gradient(135deg, var(--primary), var(--secondary)); min-height: 100vh; transition: background 0.6s ease; }
         .container { background: var(--card-bg); border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease; }
         
         h1 { color: var(--text); text-align: center; margin: 0 0 10px; font-size: 2.2em; }
@@ -31,7 +30,7 @@
         label { font-weight: 600; color: var(--text); margin-bottom: 5px; font-size: 14px; }
         input, select { padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; 
                        background: var(--card-bg); color: var(--text); }
-        input[type="range"] { accent-color: var(--primary); transition: accent-color 0.3s ease; }
+        input[type="range"] { accent-color: var(--primary); transition: accent-color 0.6s ease; }
         #expensesDisplay { color: var(--text); font-weight: 600; margin-top: 5px; display: block; }
         
         .theme-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -39,7 +38,7 @@
         .color-option { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
         .color-option.active { border-color: var(--text); }
         
-        .toggle { position: relative; width: 60px; height: 30px; background: #ccc; border-radius: 15px; cursor: pointer; }
+        .toggle { position: relative; width: 60px; height: 30px; background: #ccc; border-radius: 15px; cursor: pointer; transition: background 0.6s ease; }
         .toggle.active { background: var(--primary); }
         .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; 
                         background: white; border-radius: 50%; transition: 0.3s; }
@@ -48,7 +47,7 @@
         .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
         .result-card { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; 
                       padding: 12px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; 
-                      justify-content: center; min-height: 100px; transition: background 0.3s ease; }
+                      justify-content: center; min-height: 100px; transition: background 0.6s ease; }
         .result-card h3 { margin: 0 0 6px; font-size: 0.9em; line-height: 1.2; }
         .result-value { font-size: 1.3em; font-weight: bold; margin: 4px 0; }
         
@@ -114,8 +113,8 @@
                 </div>
                 <div class="control">
                     <label for="businessExpenses">Business Expenses (€/month)</label>
-                    <input type="range" id="businessExpenses" min="0" max="2000" value="300" oninput="calculate(); updateExpensesDisplay()">
-                    <span id="expensesDisplay">300€</span>
+                    <input type="range" id="businessExpenses" min="0" max="2000" value="0" oninput="calculate(); updateExpensesDisplay()">
+                    <span id="expensesDisplay">0€</span>
                 </div>
             </div>
         </div>
@@ -182,56 +181,81 @@
             localStorage.setItem('darkMode', !isDark);
         }
 
-        function calculateIncomeTax(income, expenses) {
-            const taxableIncome = Math.max(0, income - expenses);
-            const brackets = [[0, 0], [11265, 0.11], [28797, 0.30], [82341, 0.41], [177106, 0.45]];
+        // Social contribution rates from French umbrella company structure
+        const EMPLOYER_SOCIAL_CONTRIBUTIONS_RATE = 30.87 / 100; // 3305.51 / 10710
+        const EMPLOYEE_SOCIAL_CONTRIBUTIONS_RATE = 11.98 / 100; // 1283.37 / 10710
+        const RESERVE_FUND_RATE = 9.70 / 100;           // 1038.87 / 10710
+
+        // French income tax brackets for 2025 (for single person)
+        const TAX_BRACKETS = [
+            { min: 0, max: 11497, rate: 0.00 },
+            { min: 11498, max: 29315, rate: 0.11 },
+            { min: 29316, max: 83823, rate: 0.30 },
+            { min: 83824, max: 180294, rate: 0.41 },
+            { min: 180295, max: Infinity, rate: 0.45 }
+        ];
+
+        function calculateIncomeTax(annualSalary) {
             let tax = 0;
-            for (let i = 0; i < brackets.length; i++) {
-                const [threshold, rate] = brackets[i];
-                if (taxableIncome > threshold) {
-                    const nextThreshold = brackets[i + 1]?.[0] || Infinity;
-                    tax += Math.min(taxableIncome - threshold, nextThreshold - threshold) * rate;
+            
+            for (const bracket of TAX_BRACKETS) {
+                if (annualSalary > bracket.min) {
+                    const taxableInBracket = Math.min(annualSalary, bracket.max) - bracket.min + 1;
+                    tax += taxableInBracket * bracket.rate;
                 }
             }
+            
             return tax;
         }
 
         function calculate() {
             const dailyRate = parseFloat(document.getElementById('dailyRate').value) || 0;
             const workingDays = parseFloat(document.getElementById('workingDays').value) || 0;
-            const managementFeesRate = parseFloat(document.getElementById('managementFees').value) || 0;
+            const managementFeesRate = (parseFloat(document.getElementById('managementFees').value) || 3.0) / 100;
             const businessExpenses = parseFloat(document.getElementById('businessExpenses').value) || 0;
-
+            
             const monthlyRevenue = dailyRate * workingDays;
-            const managementFees = monthlyRevenue * (managementFeesRate / 100);
-            const afterMgmtFees = monthlyRevenue - managementFees;
-            const employerContributions = afterMgmtFees * 0.3087;
-            const grossSalary = afterMgmtFees - employerContributions;
-            const employeeContributions = grossSalary * 0.1198;
-            const reserveFund = grossSalary * 0.097;
-            const netBeforeTax = grossSalary - employeeContributions - reserveFund;
-            const annualNetBeforeTax = netBeforeTax * 12;
-            const annualExpenses = businessExpenses * 12;
-            const incomeTax = calculateIncomeTax(annualNetBeforeTax, annualExpenses);
-            const monthlyIncomeTax = incomeTax / 12;
+            const employerSocialContributions = monthlyRevenue * EMPLOYER_SOCIAL_CONTRIBUTIONS_RATE;
+            const employeeSocialContributions = monthlyRevenue * EMPLOYEE_SOCIAL_CONTRIBUTIONS_RATE;
+            const umbrellaCompanyFees = monthlyRevenue * managementFeesRate;
+            const reserveFund = monthlyRevenue * RESERVE_FUND_RATE;
+            const netBeforeTax = monthlyRevenue - employerSocialContributions - employeeSocialContributions - umbrellaCompanyFees - reserveFund;
+            
+            // Calculate annual salary and income tax (business expenses reduce taxable income)
+            const annualSalaryBeforeTax = (netBeforeTax - businessExpenses) * 12;
+            const annualIncomeTax = calculateIncomeTax(Math.max(0, annualSalaryBeforeTax));
+            const monthlyIncomeTax = annualIncomeTax / 12;
             const netAfterTax = netBeforeTax - monthlyIncomeTax - businessExpenses;
+            
             const ratio = monthlyRevenue > 0 ? (netAfterTax / monthlyRevenue * 100) : 0;
 
-            document.getElementById('monthlyRevenue').textContent = `€${monthlyRevenue.toLocaleString()}`;
-            document.getElementById('netSalaryBeforeTax').textContent = `€${netBeforeTax.toLocaleString()}`;
-            document.getElementById('netAfterTax').textContent = `€${netAfterTax.toLocaleString()}`;
-            document.getElementById('ratio').textContent = `${ratio.toFixed(1)}%`;
-
-            document.getElementById('breakdown-revenue').textContent = `€${monthlyRevenue.toLocaleString()}`;
-            document.getElementById('breakdown-mgmt').textContent = `-€${managementFees.toLocaleString()}`;
-            document.getElementById('breakdown-employer').textContent = `-€${employerContributions.toLocaleString()}`;
-            document.getElementById('breakdown-gross').textContent = `€${grossSalary.toLocaleString()}`;
-            document.getElementById('breakdown-employee').textContent = `-€${employeeContributions.toLocaleString()}`;
-            document.getElementById('breakdown-reserve').textContent = `-€${reserveFund.toLocaleString()}`;
-            document.getElementById('breakdown-net-before').textContent = `€${netBeforeTax.toLocaleString()}`;
-            document.getElementById('breakdown-tax').textContent = `-€${monthlyIncomeTax.toLocaleString()}`;
-            document.getElementById('breakdown-expenses').textContent = `-€${businessExpenses.toLocaleString()}`;
-            document.getElementById('breakdown-final').textContent = `€${netAfterTax.toLocaleString()}`;
+            // Update slider display
+            document.getElementById('expensesDisplay').textContent = `${businessExpenses}€`;
+            
+            // Update main results
+            document.getElementById('monthlyRevenue').textContent = `€${formatEuro(monthlyRevenue)}`;
+            document.getElementById('netSalaryBeforeTax').textContent = `€${formatEuro(netBeforeTax)}`;
+            document.getElementById('netAfterTax').textContent = `€${formatEuro(netAfterTax)}`;
+            document.getElementById('ratio').textContent = ratio.toFixed(1) + '%';
+            
+            // Update breakdown
+            document.getElementById('breakdown-revenue').textContent = `€${formatEuro(monthlyRevenue)}`;
+            document.getElementById('breakdown-mgmt').textContent = `-€${formatEuro(umbrellaCompanyFees)}`;
+            document.getElementById('breakdown-employer').textContent = `-€${formatEuro(employerSocialContributions)}`;
+            document.getElementById('breakdown-gross').textContent = `€${formatEuro(monthlyRevenue - employerSocialContributions - employeeSocialContributions - umbrellaCompanyFees - reserveFund + employeeSocialContributions + reserveFund)}`;
+            document.getElementById('breakdown-employee').textContent = `-€${formatEuro(employeeSocialContributions)}`;
+            document.getElementById('breakdown-reserve').textContent = `-€${formatEuro(reserveFund)}`;
+            document.getElementById('breakdown-net-before').textContent = `€${formatEuro(netBeforeTax)}`;
+            document.getElementById('breakdown-tax').textContent = `-€${formatEuro(monthlyIncomeTax)}`;
+            document.getElementById('breakdown-expenses').textContent = `-€${formatEuro(businessExpenses)}`;
+            document.getElementById('breakdown-final').textContent = `€${formatEuro(netAfterTax)}`;
+        }
+        
+        function formatEuro(amount) {
+            return new Intl.NumberFormat('fr-FR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(Math.round(amount));
         }
 
         function updateExpensesDisplay() {
