@@ -8,15 +8,16 @@
         :root {
             --primary: #e91e63; --secondary: #f06292; --primary-rgb: 233, 30, 99;
             --card-bg: #fff; --input-bg: #f8f9fa; --text: #333; --border: #ddd;
+            transition: --primary 0.5s ease, --secondary 0.5s ease;
         }
         [data-theme="dark"] {
             --card-bg: #2d3748; --input-bg: #4a5568; --text: #e2e8f0; --border: #4a5568;
         }
         
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; 
-               background: linear-gradient(135deg, var(--primary), var(--secondary)); min-height: 100vh; }
-        .container { background: var(--card-bg); border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+               background: linear-gradient(135deg, var(--primary), var(--secondary)); min-height: 100vh; transition: background 0.5s ease; }
+        .container { background: var(--card-bg); border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease; }
         
         h1 { color: var(--text); text-align: center; margin: 0 0 10px; font-size: 2.2em; }
         .subtitle { text-align: center; color: #555; margin: 0 0 30px; }
@@ -30,6 +31,8 @@
         label { font-weight: 600; color: var(--text); margin-bottom: 5px; font-size: 14px; }
         input, select { padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; 
                        background: var(--card-bg); color: var(--text); }
+        input[type="range"] { accent-color: var(--primary); transition: accent-color 0.3s ease; }
+        #expensesDisplay { color: var(--text); font-weight: 600; margin-top: 5px; display: block; }
         
         .theme-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .color-palette { display: flex; gap: 10px; }
@@ -45,15 +48,18 @@
         .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 20px 0; }
         .result-card { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; 
                       padding: 12px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; 
-                      justify-content: center; min-height: 100px; }
+                      justify-content: center; min-height: 100px; transition: background 0.3s ease; }
         .result-card h3 { margin: 0 0 6px; font-size: 0.9em; line-height: 1.2; }
         .result-value { font-size: 1.3em; font-weight: bold; margin: 4px 0; }
         
         .breakdown { background: var(--input-bg); padding: 15px; border-radius: 8px; margin-top: 20px; }
-        .breakdown-item { display: flex; justify-content: space-between; margin: 8px 0; }
+        .breakdown h3 { color: var(--text); margin: 0 0 15px; }
+        .breakdown-item { display: flex; justify-content: space-between; margin: 8px 0; padding: 8px 0; border-bottom: 1px solid var(--border); transition: border-color 0.3s ease; }
+        .breakdown-item:last-child { border-bottom: none; }
         .breakdown-item .label { color: #555; }
         .breakdown-item .value { font-weight: 600; color: var(--text); }
         [data-theme="dark"] .breakdown-item .label { color: #ccc; }
+        [data-theme="dark"] .breakdown-item { border-bottom-color: #666; }
         
         @media (max-width: 768px) {
             .control-group { grid-template-columns: 1fr; }
@@ -73,7 +79,7 @@
 </head>
 <body data-theme="light">
     <div class="container">
-        <h1>💼 Umbrella Company Rate Calculator💸</h1>
+        <h1>💼 Umbrella Company Rate Calculator</h1>
         <p class="subtitle edition">🥖 French Tax Brackets & Contributions Edition 🍷🧀</p>
         <p class="subtitle">(lamely vibe coded with Claude Sonnet 4 🤖)</p>
         
@@ -81,12 +87,15 @@
             <div class="color-palette">
                 <div class="color-option active" style="background: linear-gradient(45deg, #e91e63, #f06292)" data-theme="red-pink"></div>
                 <div class="color-option" style="background: linear-gradient(45deg, #3f51b5, #7986cb)" data-theme="blue"></div>
-                <div class="color-option" style="background: linear-gradient(45deg, #4caf50, #81c784)" data-theme="green"></div>
-                <div class="color-option" style="background: linear-gradient(45deg, #ff9800, #ffb74d)" data-theme="orange"></div>
+                <div class="color-option" style="background: linear-gradient(45deg, #e65100, #ff8a50)" data-theme="orange"></div>
                 <div class="color-option" style="background: linear-gradient(45deg, #9c27b0, #ba68c8)" data-theme="purple"></div>
                 <div class="color-option" style="background: linear-gradient(45deg, #009688, #4db6ac)" data-theme="teal"></div>
             </div>
-            <div class="toggle" onclick="toggleDarkMode()"></div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>☀️</span>
+                <div class="toggle" onclick="toggleDarkMode()"></div>
+                <span>🌙</span>
+            </div>
         </div>
         
         <div class="input-section">
@@ -101,7 +110,7 @@
                 </div>
                 <div class="control">
                     <label for="managementFees">Management Fees (%)</label>
-                    <input type="number" id="managementFees" value="7" step="0.1" oninput="calculate()">
+                    <input type="number" id="managementFees" value="3" step="0.1" oninput="calculate()">
                 </div>
                 <div class="control">
                     <label for="businessExpenses">Business Expenses (€/month)</label>
@@ -133,7 +142,7 @@
         <div class="breakdown">
             <h3>💼 Breakdown</h3>
             <div class="breakdown-item"><span class="label">Monthly Revenue (Daily Rate × Days)</span><span class="value" id="breakdown-revenue">€12,000</span></div>
-            <div class="breakdown-item"><span class="label">Management Fees (7%)</span><span class="value" id="breakdown-mgmt">-€840</span></div>
+            <div class="breakdown-item"><span class="label">Management Fees (3%)</span><span class="value" id="breakdown-mgmt">-€840</span></div>
             <div class="breakdown-item"><span class="label">Employer Social Contributions (30.87%)</span><span class="value" id="breakdown-employer">-€3,444</span></div>
             <div class="breakdown-item"><span class="label">Gross Salary</span><span class="value" id="breakdown-gross">€7,716</span></div>
             <div class="breakdown-item"><span class="label">Employee Social Contributions (11.98%)</span><span class="value" id="breakdown-employee">-€924</span></div>
@@ -149,8 +158,7 @@
         const themes = {
             'red-pink': { primary: '#e91e63', secondary: '#f06292', rgb: '233, 30, 99' },
             'blue': { primary: '#3f51b5', secondary: '#7986cb', rgb: '63, 81, 181' },
-            'green': { primary: '#4caf50', secondary: '#81c784', rgb: '76, 175, 80' },
-            'orange': { primary: '#ff9800', secondary: '#ffb74d', rgb: '255, 152, 0' },
+            'orange': { primary: '#e65100', secondary: '#ff8a50', rgb: '230, 81, 0' },
             'purple': { primary: '#9c27b0', secondary: '#ba68c8', rgb: '156, 39, 176' },
             'teal': { primary: '#009688', secondary: '#4db6ac', rgb: '0, 150, 136' }
         };
